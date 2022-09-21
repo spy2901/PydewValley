@@ -4,7 +4,6 @@ from pytmx.util_pygame import load_pygame
 from support import *
 from random import choice
 
-
 class SoilTile(pygame.sprite.Sprite):
     def __init__(self, pos, surf, groups):
         super().__init__(groups)
@@ -12,14 +11,12 @@ class SoilTile(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(topleft=pos)
         self.z = LAYERS['soil']
 
-
 class WaterTile(pygame.sprite.Sprite):
     def __init__(self, pos, surf, groups):
         super().__init__(groups)
         self.image = surf
         self.rect = self.image.get_rect(topleft=pos)
         self.z = LAYERS['soil water']
-
 
 class Plant(pygame.sprite.Sprite):
     def __init__(self, plant_type, groups, soil, check_watered):
