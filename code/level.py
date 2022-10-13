@@ -9,6 +9,7 @@ from transition import Transition
 from soil import SoilLayer
 from sky import Rain, Sky
 from random import randint
+from menu import Menu
 
 class Level:
 	def __init__(self):
@@ -32,6 +33,10 @@ class Level:
 		self.raining = randint(0,10) > 3
 		self.soil_layer.raining = self.raining
 		self.sky = Sky()
+
+		#shop
+		self.menu = Menu(self.player, self.toggle_shop)
+		self.shop_active = False
 
 	def setup(self):
 		tmx_data = load_pygame('../data/map.tmx')
@@ -80,9 +85,13 @@ class Level:
 					collision_sprites = self.collision_sprites,
 					tree_sprites = self.tree_sprites,
 					interaction = self.interaction_sprites,
-					soil_layer = self.soil_layer)
+					soil_layer = self.soil_layer,
+					toggle_shop = self.toggle_shop)
 
 			if obj.name == 'Bed':
+				Interaction((obj.x,obj.y),(obj.width,obj.height), self.interaction_sprites, obj.name)
+
+			if obj.name == 'Trader':
 				Interaction((obj.x,obj.y),(obj.width,obj.height), self.interaction_sprites, obj.name)
 
 		Generic(
@@ -94,6 +103,10 @@ class Level:
 	def player_add(self,item):
 
 		self.player.item_inventory[item] += 1
+
+	def toggle_shop(self):
+
+		self.shop_active = not self.shop_active
 
 	def reset(self):
 
@@ -125,23 +138,28 @@ class Level:
 					self.soil_layer.grid[plant.rect.centery // TILE_SIZE][plant.rect.centerx // TILE_SIZE].remove('P')
 
 	def run(self,dt):
+
+		#drawing logic
 		self.display_surface.fill('black')
 		self.all_sprites.custom_draw(self.player)
-		self.all_sprites.update(dt)
-		self.plant_collision()
 
+		#updates
+		if self.shop_active:
+			self.menu.update()
+		else:
+			self.all_sprites.update(dt)
+			self.plant_collision()
+
+		#weather
 		self.overlay.display()
-
-		#rain
-		if self.raining:
+		if self.raining and not self.shop_active:
 			self.rain.update()
-
-		# daytime
 		self.sky.display(dt)
 
 		#transition overaly
 		if self.player.sleep:
 			self.transition.play()
+
 
 class CameraGroup(pygame.sprite.Group):
 	def __init__(self):
@@ -161,7 +179,7 @@ class CameraGroup(pygame.sprite.Group):
 					self.display_surface.blit(sprite.image, offset_rect)
 
 					# hitbox && tool direction
-					# # anayticks
+					# analytics
 					# if sprite == player:
 					# 	pygame.draw.rect(self.display_surface, 'red', offset_rect, 5)
 					# 	hitbox_rect = player.hitbox.copy()
